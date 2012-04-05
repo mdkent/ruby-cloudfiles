@@ -50,6 +50,7 @@ class SwiftClientTest < Test::Unit::TestCase
     assert_equal '/auth/v1.0', parsed.path
     assert_equal 'foo.bar', conn.address
     assert_equal 1234, conn.port
+    assert_equal 60, conn.read_timeout
     assert_equal Net::HTTP, conn.class
   end
   
@@ -60,10 +61,17 @@ class SwiftClientTest < Test::Unit::TestCase
     assert_equal 'foo.bar', parsed.host
     assert_equal '/auth/v1.0', parsed.path
     assert_equal 'foo.bar', conn.address
+    assert_equal 60, conn.read_timeout
     assert_equal 443, conn.port
     assert_equal Net::HTTP, conn.class
     assert_equal true, conn.use_ssl?
     assert_equal OpenSSL::SSL::VERIFY_NONE, conn.verify_mode
+  end
+
+  def test_http_connection_with_custom_read_timeout
+    SwiftClient.read_timeout = 42
+    parsed, conn = SwiftClient.http_connection("https://foo.bar:443/auth/v1.0")
+    assert_equal 42, conn.read_timeout
   end
   
   def test_http_connection_with_bad_scheme

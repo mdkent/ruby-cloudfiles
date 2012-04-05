@@ -153,17 +153,27 @@ public
     if parsed.scheme == 'http'
       require 'net/http'
       conn = Net::HTTP::Proxy(proxy_host, proxy_port).new(parsed.host, parsed.port)
+      conn.read_timeout = self.read_timeout
       [parsed, conn]
     elsif parsed.scheme == 'https'
       require 'net/https'
       conn = Net::HTTP::Proxy(proxy_host, proxy_port).new(parsed.host, parsed.port)
       conn.use_ssl = true
+      conn.read_timeout = self.read_timeout
       conn.verify_mode = OpenSSL::SSL::VERIFY_NONE
       [parsed, conn]
     else
       raise ClientException.new(
         "Cannot handle protocol scheme #{parsed.scheme} for #{url} %s")
     end
+  end
+
+  def self.read_timeout
+    @read_timeout ||= 60
+  end
+
+  def self.read_timeout=(timeout)
+    @read_timeout = timeout
   end
   
   def http_connection
