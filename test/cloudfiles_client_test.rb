@@ -11,6 +11,10 @@ class SwiftClientTest < Test::Unit::TestCase
     Net::HTTP.any_instance.stubs(:new).stubs({:port => 1234, :address => 'foo.bar', :class => Net::HTTP})
     @parsed, @conn = SwiftClient.http_connection(@url)
   end
+
+  def teardown
+    SwiftClient.read_timeout = nil
+  end
   
   def test_client_exception
     foo = ClientException.new("foobar", :http_status => "404")

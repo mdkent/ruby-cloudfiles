@@ -25,6 +25,12 @@ class CloudfilesConnectionTest < Test::Unit::TestCase
     assert_equal @hash_connection.authuser, "dummy_user"
     assert_equal @hash_connection.authkey, "dummy_key"
   end
+
+  def test_initialize_with_custom_read_timeout
+    CloudFiles::Authentication.expects(:new).returns(true)
+    SwiftClient.expects(:read_timeout=).with(42).once
+    @hash_connection = CloudFiles::Connection.new(:read_timeout => 42, :username => 'dummy_user', :api_key => 'dummy_key')
+  end
   
   def test_authok
     # This would normally be set in CloudFiles::Authentication

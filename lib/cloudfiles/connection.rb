@@ -89,6 +89,7 @@ module CloudFiles
         @snet = ENV['RACKSPACE_SERVICENET'] || options[:snet]
         @proxy_host = options[:proxy_host]
         @proxy_port = options[:proxy_port]
+        SwiftClient.read_timeout = options[:read_timeout]
       else
         @authuser = args[0] ||( raise CloudFiles::Exception::Authentication, "Must supply the username as the first argument")
         @authkey = args[1] || (raise CloudFiles::Exception::Authentication, "Must supply the API key as the second argument")
