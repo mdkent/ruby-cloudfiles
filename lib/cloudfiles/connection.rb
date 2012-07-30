@@ -75,6 +75,10 @@ module CloudFiles
     #
     #   cf = CloudFiles::Connection.new(:username => "MY_USERNAME", :api_key => "MY_API_KEY", :auth_url => CloudFiles::AUTH_UK, :retry_auth => true, :snet => false, :proxy_host => "localhost", :proxy_port => "1234")
     #
+    # Operations on Cloud Files on large objects can sometimes take longer than the default read timeout set by Net::HTTP (60 seconds).
+    # You may customized the read timeout for these operations by setting the :read_timeout value in your hash of arguments to the initializer.
+    # The :read_timeout value is specified in seconds.
+    #
     # The old style (positional arguments) is deprecated and will be removed at some point in the future.
     #
     #   cf = CloudFiles::Connection.new(MY_USERNAME, MY_API_KEY, RETRY_AUTH, USE_SNET)
