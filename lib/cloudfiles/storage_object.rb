@@ -17,7 +17,7 @@ module CloudFiles
       @containername = container.name
       @name = objectname
       @make_path = make_path
-      @storagepath = "#{CloudFiles.escape @containername}/#{escaped_name}"
+      @storagepath = "#{CloudFiles.escape @containername}/#{@name}"
 
       if force_exists
         raise CloudFiles::Exception::NoSuchObject, "Object #{@name} does not exist" unless container.object_exists?(objectname)
@@ -35,7 +35,7 @@ module CloudFiles
     def object_metadata
       @object_metadata ||= (
         begin
-          response = SwiftClient.head_object(self.container.connection.storageurl, self.container.connection.authtoken, self.container.escaped_name, escaped_name)
+          response = SwiftClient.head_object(self.container.connection.storageurl, self.container.connection.authtoken, self.container.escaped_name, @name)
         rescue ClientException => e
           raise CloudFiles::Exception::NoSuchObject, "Object #{@name} does not exist" unless (e.status.to_s =~ /^20/)
         end
@@ -99,7 +99,7 @@ module CloudFiles
         headers['Range'] = range
       end
       begin
-        response = SwiftClient.get_object(self.container.connection.storageurl, self.container.connection.authtoken, self.container.escaped_name, escaped_name)
+        response = SwiftClient.get_object(self.container.connection.storageurl, self.container.connection.authtoken, self.container.escaped_name, @name)
         response[1]
       rescue ClientException => e
         raise CloudFiles::Exception::NoSuchObject, "Object #{@name} does not exist" unless (e.status.to_s =~ /^20/)
@@ -126,7 +126,7 @@ module CloudFiles
         headers['Range'] = range
       end
       begin
-        SwiftClient.get_object(self.container.connection.storageurl, self.container.connection.authtoken, self.container.escaped_name, escaped_name, nil, nil, &block)
+        SwiftClient.get_object(self.container.connection.storageurl, self.container.connection.authtoken, self.container.escaped_name, @name, nil, nil, &block)
       end
     end
 
@@ -150,7 +150,7 @@ module CloudFiles
       headers = {}
       metadatahash.each{ |key, value| headers['X-Object-Meta-' + key.to_s.capitalize] = value.to_s }
       begin
-        SwiftClient.post_object(self.container.connection.storageurl, self.container.connection.authtoken, self.container.escaped_name, escaped_name, headers)
+        SwiftClient.post_object(self.container.connection.storageurl, self.container.connection.authtoken, self.container.escaped_name, @name, headers)
         true
       rescue ClientException => e
         raise CloudFiles::Exception::NoSuchObject, "Object #{@name} does not exist" if (e.status.to_s == "404")
@@ -178,7 +178,7 @@ module CloudFiles
     def set_manifest(manifest)
       headers = {'X-Object-Manifest' => manifest}
       begin
-        SwiftClient.post_object(self.container.connection.storageurl, self.container.connection.authtoken, self.container.escaped_name, escaped_name, headers)
+        SwiftClient.post_object(self.container.connection.storageurl, self.container.connection.authtoken, self.container.escaped_name, @name, headers)
         true
       rescue ClientException => e
         raise CloudFiles::Exception::NoSuchObject, "Object #{@name} does not exist" if (response.code == "404")
@@ -221,7 +221,7 @@ module CloudFiles
       # If we're taking data from standard input, send that IO object to cfreq
       data = $stdin if (data.nil? && $stdin.tty? == false)
       begin
-        response = SwiftClient.put_object(self.container.connection.storageurl, self.container.connection.authtoken, self.container.escaped_name, escaped_name, data, nil, nil, nil, nil, headers)
+        response = SwiftClient.put_object(self.container.connection.storageurl, self.container.connection.authtoken, self.container.escaped_name, @name, data, nil, nil, nil, nil, headers)
       rescue ClientException => e
         code = e.status.to_s
         raise CloudFiles::Exception::InvalidResponse, "Invalid content-length header sent" if (code == "412")
@@ -254,7 +254,7 @@ module CloudFiles
       headers = {}
       headers = {"X-Purge-Email" => email} if email
       begin
-        SwiftClient.delete_object(self.container.connection.cdnurl, self.container.connection.authtoken, self.container.escaped_name, escaped_name, nil, headers)
+        SwiftClient.delete_object(self.container.connection.cdnurl, self.container.connection.authtoken, self.container.escaped_name, @name, nil, headers)
         true
       rescue ClientException => e
         raise CloudFiles::Exception::Connection, "Error Unable to Purge Object: #{@name}" unless (e.status.to_s =~ /^20.$/)
@@ -372,15 +372,13 @@ module CloudFiles
       new_headers = options[:headers] || {}
       raise CloudFiles::Exception::Syntax, "The :headers option must be a hash" unless new_headers.is_a?(Hash)
       new_name.sub!(/^\//,'')
-      headers = {'X-Copy-From' => "#{self.container.name}/#{self.name}", 'Content-Type' => self.content_type.sub(/;.+/, '')}.merge(new_headers)
-      # , 'Content-Type' => self.content_type
-      new_path = "#{CloudFiles.escape new_container}/#{escape_name new_name}"
+      headers = {'X-Copy-From' => "#{self.container.name}/#{CloudFiles.escape self.name}", 'Content-Type' => self.content_type.sub(/;.+/, '')}.merge(new_headers)
       begin
-        response = SwiftClient.put_object(self.container.connection.storageurl, self.container.connection.authtoken, (CloudFiles.escape new_container), escape_name(new_name), nil, nil, nil, nil, nil, headers)
+        response = SwiftClient.put_object(self.container.connection.storageurl, self.container.connection.authtoken, (CloudFiles.escape new_container), new_name, nil, nil, nil, nil, nil, headers)
         return CloudFiles::Container.new(self.container.connection, new_container).object(new_name)
       rescue ClientException => e
         code = e.status.to_s
-        raise CloudFiles::Exception::InvalidResponse, "Invalid response code #{response.code}" unless (response.code =~ /^20/)
+        raise CloudFiles::Exception::InvalidResponse, "Invalid response code #{code}" unless (code =~ /^20/)
       end
     end
     
