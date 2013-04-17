@@ -1,3 +1,5 @@
+= New projects should use {fog}[http://github.com/fog/fog].
+
 = Rackspace Cloud Files
 
 == Description
