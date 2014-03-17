@@ -439,15 +439,20 @@ class CloudfilesContainerTest < Test::Unit::TestCase
       @container.purge_from_cdn
     end
   end
-  
-  def test_cdn_metadata_fails
+
+  def test_cdn_metadata_no_container
     connection = stub(:storagehost => 'test.storage.example', :storagepath => '/dummy/path', :storageport => 443, :storagescheme => 'https', :cdnmgmthost => 'cdm.test.example', :cdnmgmtpath => '/dummy/path', :cdnmgmtport => 443, :cdnmgmtscheme => 'https', :cdn_available? => true, :cdnurl => 'http://foo.test.example/container', :storageurl => 'http://foo.test.example/container', :authtoken => "dummy token")
     SwiftClient.stubs(:head_container).returns({'x-container-bytes-used' => '0','x-container-object-count' => '0'})
-    @container = CloudFiles::Container.new(connection, "test_container")    
-    SwiftClient.stubs(:head_container).raises(ClientException.new("test_cdn_metadata_fails", :http_status => 404))    
-    assert_raise(CloudFiles::Exception::NoSuchContainer) do
-      @container.cdn_metadata
-    end
+    @container = CloudFiles::Container.new(connection, "test_container")
+    SwiftClient.stubs(:head_container).raises(ClientException.new("test_cdn_metadata_fails", :http_status => 404))
+    assert_equal @container.cdn_metadata, {
+      :cdn_enabled => false,
+      :cdn_ttl => nil,
+      :cdn_url => nil,
+      :cdn_ssl_url => nil,
+      :cdn_streaming_url => nil,
+      :cdn_log => false
+    }
   end
   
   def test_cdn_metadata_no_cdn

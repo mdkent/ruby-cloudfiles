@@ -21,7 +21,7 @@ class SwiftClientTest < Test::Unit::TestCase
     assert_equal "foobar  404", foo.to_s
   end
   
-  def test_chunked_connection_wrapper
+  def test_chunked_connection_wrapper_with_read_argument
     file = mock("File")
     file.stubs(:read).returns("this ", "is so", "me da", "ta!", "")
     file.stubs(:eof?).returns(true)
@@ -31,6 +31,20 @@ class SwiftClientTest < Test::Unit::TestCase
     assert_equal "is so", chunk.read(123)
     assert_equal "me da", chunk.read(123)
     assert_equal "ta!", chunk.read(123)
+    assert_equal true, chunk.eof?
+    assert_equal true, chunk.eof!
+  end
+  
+  def test_chunked_connection_wrapper_without_read_argument
+    file = mock("File")
+    file.stubs(:read).returns("this ", "is so", "me da", "ta!", "")
+    file.stubs(:eof?).returns(true)
+    file.stubs(:eof!).returns(true)
+    chunk = ChunkedConnectionWrapper.new(file, 5)
+    assert_equal "this ", chunk.read
+    assert_equal "is so", chunk.read
+    assert_equal "me da", chunk.read
+    assert_equal "ta!", chunk.read
     assert_equal true, chunk.eof?
     assert_equal true, chunk.eof!
   end

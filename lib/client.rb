@@ -37,7 +37,7 @@ class ChunkedConnectionWrapper
     @file = data
   end
   
-  def read(foo)
+  def read(foo=nil)
     @file.read(@size)
   end
 

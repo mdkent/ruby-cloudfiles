@@ -7,6 +7,14 @@ Gem::Specification.new do |s|
   s.authors = ["H. Wade Minter", "Rackspace Hosting"]
   s.description = %q{A Ruby version of the Rackspace Cloud Files API.}
   s.email = %q{minter@lunenburg.org}
+  s.post_install_message = %Q{
+**** PLEASE NOTE **********************************************************************************************
+
+  #{s.name} has been deprecated. Please consider using fog (http://github.com/fog/fog) for all new projects. 
+  
+***************************************************************************************************************
+
+} if s.respond_to? :post_install_message
   s.extra_rdoc_files = [
     "README.rdoc",
      "TODO"
@@ -40,7 +48,7 @@ Gem::Specification.new do |s|
   s.homepage = %q{http://www.rackspacecloud.com/cloud_hosting_products/files}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.5.0.1}
+  s.rubygems_version = %q{1.5.0.3}
   s.summary = %q{A Ruby API into Rackspace Cloud Files}
   s.test_files = [
     "test/cf-testunit.rb",
